@@ -38,6 +38,12 @@ class SplayTree(object):
     self._size+=1
 
   def insertHelper(self,key,node):
+    """Insert an item into the splay tree given a node.
+
+    Recursive helper function that inserts keys into a binary tree. The node
+    that the key is inserted to is returned.
+
+    """
     if key < node.entry:
       if node.left:
         return self.insertHelper(key,node.left)
@@ -50,6 +56,41 @@ class SplayTree(object):
       else:
         node.right = TreeNode(key,parent=node)
         return node
+
+  def binaryHelper(self,key,node):
+    """Find a node that is right for the given key.
+
+    Recursive helper function that returns the node that suits the key.
+    If the key is not currently in the tree, return the parent node. If the key
+    is already in the tree, return the node that contains it.
+
+    """
+    if key < node.entry:
+      if node.left:
+        return self.binaryHelper(node.left)
+      else:
+        return node #Return the parent node
+    else:
+      if node.right:
+        return self.binaryHelper(key,node.right)
+      else:
+        return node
+
+  def find(self,key):
+    
+
+  def remove(self,key):
+    """Remove an item from the splay tree.
+
+    Given a key, it will be removed in O(log(n)) amortized time and its parent 
+    will be splayed to the root of the tree. If the operation is successful,
+    the value of the key will be returned, otherwise, a value of None will be
+    returned. Calling remove() on a duplicate key will result in an arbitrary
+    key being removed.
+
+    """
+    #TODO:Implement
+
 
   def splay(self,node):
     """Splay a node up to the root.
@@ -149,6 +190,7 @@ class TreeNode(object):
     parent the parent of this node.
     left the left child node which has an entry less than this node.
     right the right child node which has an entry less than this node.
+
   """
 
   def __init__(self,key,parent=None,left=None,right=None):
