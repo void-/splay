@@ -2,8 +2,9 @@ class SplayTree(object):
   """Splay Tree object.
 
   A splay tree is a self balancing binary search tree with operations that run 
-  in O(log(n)) amortized time where n is the number of entries in the tree. 
-  This particular implementation only holds keys, no associated values.
+  in O(log(n)) amortized time, where n is the number of entries in the tree. 
+  This particular implementation uses a dictionary interface; it may be
+  extended to use a key only interface however.
 
   Member Variables:
     _size the number of entries in this splay tree.
@@ -58,26 +59,44 @@ class SplayTree(object):
         return node
 
   def binaryHelper(self,key,node):
-    """Find a node that is right for the given key.
+    """Find a node that is *right* for the given key.
 
     Recursive helper function that returns the node that suits the key.
     If the key is not currently in the tree, return the parent node. If the key
-    is already in the tree, return the node that contains it.
+    is already in the tree, return the node that contains it. This function
+    should never return None if it is always passed a valid(not None) node.
 
     """
-    if key < node.entry:
+    if key == node.key:
+      return node
+    elif key < node.key:
       if node.left:
         return self.binaryHelper(node.left)
       else:
         return node #Return the parent node
-    else:
+    elif key > node.key:
       if node.right:
         return self.binaryHelper(key,node.right)
       else:
         return node
 
   def find(self,key):
-    
+    """Return the value that corresponds to the given key.
+
+    Search the tree for the given key and return its corresponding value. If the
+    key is not in this tree, return None. No duplicates are allowed in this
+    implementation.
+
+    """
+    if self._root:
+      node = self.binaryHelper(key,self._root)
+      self.splay(node) #Splay the found node to the root
+      if node.key == key:
+        return node.value
+      else:
+        return None
+    else:
+      return None
 
   def remove(self,key):
     """Remove an item from the splay tree.
@@ -90,7 +109,6 @@ class SplayTree(object):
 
     """
     #TODO:Implement
-
 
   def splay(self,node):
     """Splay a node up to the root.
@@ -183,18 +201,30 @@ class SplayTree(object):
 class TreeNode(object):
   """Tree Node object.
 
-  A tree node is an entry within a binary tree. 
+  A tree node is an entry within a binary tree that holds a key value pair.
 
   Member Variables:
-    entry the item that this node contains.
+    _key the key that this node contains. TreeNodes are searched by key.
+    _value the value that corresponds to the stored key.
     parent the parent of this node.
-    left the left child node which has an entry less than this node.
-    right the right child node which has an entry less than this node.
+    left the left child node which has a key less than this node.
+    right the right child node which has a key less than this node.
 
   """
 
-  def __init__(self,key,parent=None,left=None,right=None):
-    self.entry = key
+  def __init__(self,key,value,parent=None,left=None,right=None):
+    self._key = key
+    self._value = value
     self.parent = parent
     self.left = left
     self.right = right
+
+  @property
+  def key(self):
+    """Return the key stored by this tree node."""
+    return self._key
+
+  @property
+  def value(self):
+  """Return the value stored by this tree node."""
+    return self._key
