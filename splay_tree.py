@@ -1,4 +1,4 @@
-class SplayTree(object):
+cminlass SplayTree(object):
   """Splay Tree object.
 
   A splay tree is a self balancing binary search tree with operations that run 
@@ -23,19 +23,27 @@ class SplayTree(object):
 
     return self._size
 
-  def insert(self,key):
+  def insert(self,key,value):
     """Insert an item into the splay tree, increasing its size.
 
     Keys will be inserted in O(log(n)) amortized time and then splayed to the
-    root of the tree. Duplicates are allowed; find() will return an arbitrary
-    entry.
+    root of the tree. Duplicates are **not** allowed.
 
     """
     if self._root:
-      node = insertHelper(key,self._root)
+      node = binaryHelper(key,self._root)
+      if key == node.key: #Replace a duplicate key
+        node._key = key
+        node._value = value
+      elif key < node.key:
+        node.left = TreeNode(key,value)
+        node = node.left
+      elif key > node.key:
+        node.right = TreeNode(key,value)
+        node = node.right
       self.splay(node)
     else:
-      self._root = TreeNode(key)
+      self._root = TreeNode(key,value)
     self._size+=1
 
   def insertHelper(self,key,node):
@@ -58,16 +66,102 @@ class SplayTree(object):
         node.right = TreeNode(key,parent=node)
         return node
 
+  def find(self,key):
+    """Return the value that corresponds to the given key.
+
+    Search the tree for the given key and return its corresponding value in 
+    O(log(n)) amortized time. If the key is not in this tree, return None. 
+    The node that the search ends on is splayed to the root of the tree. No 
+    duplicates are allowed in this implementation.
+
+    """
+    if self._root:
+      node = self.binaryHelper(key,self._root)
+      self.splay(node) #Splay the found node to the root
+      if node.key == key:
+        return node.value
+      else:
+        return
+
+  def remove(self,key):
+    """Remove an item from the splay tree.
+
+    Given a key, it will be removed in O(log(n)) amortized time and its parent 
+    will be splayed to the root of the tree. If the operation is successful,
+    the size of the tree will decrease be one and the value of the key will be 
+    returned, otherwise, a value of None will be returned. Calling remove() on 
+    a duplicate key will result in an arbitrary key being removed.
+
+    """
+    #TODO:Implement
+    node = binaryHelper(key,self._root)
+    if not node:
+      return#splay me later
+    elif node.key != key:#node is not actually in tree
+      return#splay me later
+    elif not node.left or not node.right:#node with single or no child
+      if node == self._root:
+        self._root = node.left if not node.right else node.right
+      else:
+        (node.parent.left if node.parent.left == node else node.parent.right) = \
+        node.left if not node.right else node.right
+    else:#node must have two children
+      r = minNode(node.right)#r is gaurenteed to be a node
+
+      r.left = node.left
+      node.left.parent = r
+
+      if node.right != r:#general case for removing r
+        r.parent.left = r.right
+        if r.right: r.right.parent = r.parent
+        n = r.parent#save as n
+        r.right = node.right
+        node.right.parent = r
+
+      r.parent = node.parent
+      #now link up the parents
+      if node == self._root:
+        pass
+      if node.parent:
+        node.
+        if node.parent.left == node:
+          node.parent.left = r
+        else:
+          node.parent.right = r
+    splay(r)
+
+  def minNode(self,node):
+    """Return the node that contains the minimum key.
+
+    Helper function that returns the node with the minimum key in a tree given
+    the root of that tree. If the given node is None, return None.
+
+    """
+    if not node or not node.left:
+      return node
+    return self.minNode(node.left)
+
+  def maxNode(self,node):
+    """Return the node that contains the maximum key.
+
+    Helper function that returns the node with the maximum key in a tree given
+    the root of that tree.
+
+    """
+    if not node or not node.right:
+      return node
+    return self.minNode(node.right)
+
   def binaryHelper(self,key,node):
     """Find a node that is *right* for the given key.
 
-    Recursive helper function that returns the node that suits the key.
-    If the key is not currently in the tree, return the parent node. If the key
-    is already in the tree, return the node that contains it. This function
-    should never return None if it is always passed a valid(not None) node.
+    Helper function that returns the node that suits the key. If the key is not 
+    currently in the tree, return the parent node. If the key is already in the
+    tree, return the node that contains it. This function returns None if the 
+    given node is equal to None.
 
     """
-    if key == node.key:
+    if not node or key == node.key:
       return node
     elif key < node.key:
       if node.left:
@@ -79,36 +173,6 @@ class SplayTree(object):
         return self.binaryHelper(key,node.right)
       else:
         return node
-
-  def find(self,key):
-    """Return the value that corresponds to the given key.
-
-    Search the tree for the given key and return its corresponding value. If the
-    key is not in this tree, return None. No duplicates are allowed in this
-    implementation.
-
-    """
-    if self._root:
-      node = self.binaryHelper(key,self._root)
-      self.splay(node) #Splay the found node to the root
-      if node.key == key:
-        return node.value
-      else:
-        return None
-    else:
-      return None
-
-  def remove(self,key):
-    """Remove an item from the splay tree.
-
-    Given a key, it will be removed in O(log(n)) amortized time and its parent 
-    will be splayed to the root of the tree. If the operation is successful,
-    the value of the key will be returned, otherwise, a value of None will be
-    returned. Calling remove() on a duplicate key will result in an arbitrary
-    key being removed.
-
-    """
-    #TODO:Implement
 
   def splay(self,node):
     """Splay a node up to the root.
