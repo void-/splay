@@ -33,15 +33,15 @@ class SplayTree(object):
 
     """
     if self._root:
-      node = binaryHelper(key,self._root)
+      node = self.binaryHelper(key,self._root)
       if key == node.key: #Replace a duplicate key
         node._key = key
         node._value = value
       elif key < node.key:
-        node.left = TreeNode(key,value)
+        node.left = TreeNode(key,value,node)
         node = node.left
       elif key > node.key:
-        node.right = TreeNode(key,value)
+        node.right = TreeNode(key,value,node)
         node = node.right
       self.splay(node)
     else:
@@ -82,8 +82,6 @@ class SplayTree(object):
       self.splay(node) #Splay the found node to the root
       if node.key == key:
         return node.value
-      else:
-        return
 
   def __contains__(self,key):
     """Determine if a given key is within the tree. Wrapper for find()."""
@@ -99,7 +97,7 @@ class SplayTree(object):
     a duplicate key will result in an arbitrary key being removed.
 
     """
-    node = binaryHelper(key,self._root)
+    node = self.binaryHelper(key,self._root)
     n = node
     if not node:
       return
@@ -113,8 +111,9 @@ class SplayTree(object):
           node.parent.left = (node.left if not node.right else node.right)
         else:
           node.parent.right = (node.left if not node.right else node.right)
+      self._size-=1
     else:#node must have two children
-      r = minNode(node.right)#r is guaranteed to be a node
+      r = self.minNode(node.right)#r is guaranteed to be a node
       r.left = node.left
       node.left.parent = r
 
@@ -133,7 +132,8 @@ class SplayTree(object):
           node.parent.left = r
         else:
           node.parent.right = r
-    splay(n)
+      self._size-=1
+    self.splay(n)
 
   def minNode(self,node):
     """Return the node that contains the minimum key.
@@ -170,7 +170,7 @@ class SplayTree(object):
       return node
     elif key < node.key:
       if node.left:
-        return self.binaryHelper(node.left)
+        return self.binaryHelper(key,node.left)
       else:
         return node #Return the parent node
     elif key > node.key:
@@ -202,27 +202,31 @@ class SplayTree(object):
       return
     elif node.parent == self._root: #Zig
       if (node.parent).left == node:
-        return rotateRight(node)
+        return self.rotateRight(node)
       elif (node.parent).right == node:
-        return rotateLeft(node)
+        return self.rotateLeft(node)
     #right left zig-zag
     elif (node.parent.right == node) and (node.parent.parent.left == node.parent):
-      rotateLeft(node)
-      rotateRight(node)
+      self.rotateLeft(node)
+      self.rotateRight(node)
     #left right zig-zag
     elif (node.parent.left == node) and (node.parent.parent.right == node.parent):
-      rotateRight(node)
-      rotateLeft(node)
+      self.rotateRight(node)
+      self.rotateLeft(node)
     #left zig-zig
     elif (node.parent.left == node) and (node.parent.parent.left == node.parent):
-      rotateRight(node.parent)
-      rotateRight(node)
-      return splay(node)#recurse
+      self.rotateRight(node.parent)
+      self.rotateRight(node)
+      return self.splay(node)#recurse
     #right zig-zig
     elif (node.parent.right == node) and (node.parent.parent.right == node.parent):
-      rotateLeft(node.parent)
-      rotateLeft(node)
-      return splay(node)#recurse
+      self.rotateLeft(node.parent)
+      self.rotateLeft(node)
+      return self.splay(node)#recurse
+
+  def splay(self,node):
+    """Mock out splay method: do nothing."""
+    pass
 
   def rotateRight(self,node):
     """Rotate a given node right in the tree.
@@ -236,7 +240,7 @@ class SplayTree(object):
 
     """
     node.parent.left = node.right
-    node.right.parent = node.parent
+    if node.right:node.right.parent = node.parent
     node.right = node.parent
     node.right.parent = node
     node.parent = node.parent.parent
@@ -257,7 +261,7 @@ class SplayTree(object):
 
     """
     node.parent.right = node.left
-    node.left.parent = node.parent
+    if node.left:node.left.parent = node.parent
     node.left = node.parent
     node.left.parent = node
     node.parent = node.parent.parent
@@ -266,6 +270,27 @@ class SplayTree(object):
         node.parent.left = node
       elif node.parent.right == node.left:
         node.parent.right = node
+
+  def __str__(self):
+    from collections import deque
+    q = deque()
+    n = lambda:None
+    q.append(self._root)
+    q.append(n)
+    a = None
+    result = ""
+    while len(q) > 1:
+      a = q.popleft()
+      if a == n:
+        result+="\n"
+        q.append(a)
+      elif a:
+        q.append(a.left)
+        q.append(a.right)
+        result+="  "+str(a.key)+":"+str(a.value)
+      else:
+        result+="  "
+    return result
 
 class TreeNode(object):
   """Tree Node object.
@@ -282,10 +307,7 @@ class TreeNode(object):
   """
 
   def __init__(self,key,value,parent=None,left=None,right=None):
-    """Initialize a Tree Node object given certain values.
-
-    
-    """
+    """Initialize a Tree Node object given certain values."""
     self._key = key
     self._value = value
     self.parent = parent
@@ -300,4 +322,4 @@ class TreeNode(object):
   @property
   def value(self):
     """Return the value stored by this tree node."""
-    return self._key
+    return self._value
