@@ -1,4 +1,4 @@
-cminlass SplayTree(object):
+class SplayTree(object):
   """Splay Tree object.
 
   A splay tree is a self balancing binary search tree with operations that run 
@@ -27,7 +27,9 @@ cminlass SplayTree(object):
     """Insert an item into the splay tree, increasing its size.
 
     Keys will be inserted in O(log(n)) amortized time and then splayed to the
-    root of the tree. Duplicates are **not** allowed.
+    root of the tree. Duplicates are **not** allowed in the sense that only
+    one copy of a key is allowed in the tree at a time. Further insertions
+    with that key will overwrite previous keys.
 
     """
     if self._root:
@@ -83,6 +85,10 @@ cminlass SplayTree(object):
       else:
         return
 
+  def __contains__(self,key):
+    """Determine if a given key is within the tree. Wrapper for find()."""
+    return bool(self.find(key))
+
   def remove(self,key):
     """Remove an item from the splay tree.
 
@@ -93,21 +99,22 @@ cminlass SplayTree(object):
     a duplicate key will result in an arbitrary key being removed.
 
     """
-    #TODO:Implement
     node = binaryHelper(key,self._root)
+    n = node
     if not node:
-      return#splay me later
+      return
     elif node.key != key:#node is not actually in tree
-      return#splay me later
+      pass
     elif not node.left or not node.right:#node with single or no child
       if node == self._root:
         self._root = node.left if not node.right else node.right
       else:
-        (node.parent.left if node.parent.left == node else node.parent.right) = \
-        node.left if not node.right else node.right
+        if node.parent.left == node:
+          node.parent.left = (node.left if not node.right else node.right)
+        else:
+          node.parent.right = (node.left if not node.right else node.right)
     else:#node must have two children
-      r = minNode(node.right)#r is gaurenteed to be a node
-
+      r = minNode(node.right)#r is guaranteed to be a node
       r.left = node.left
       node.left.parent = r
 
@@ -119,16 +126,14 @@ cminlass SplayTree(object):
         node.right.parent = r
 
       r.parent = node.parent
-      #now link up the parents
-      if node == self._root:
-        pass
-      if node.parent:
-        node.
+      if node == self._root:#link up parents
+        self._root = node
+      else:
         if node.parent.left == node:
           node.parent.left = r
         else:
           node.parent.right = r
-    splay(r)
+    splay(n)
 
   def minNode(self,node):
     """Return the node that contains the minimum key.
@@ -193,9 +198,9 @@ cminlass SplayTree(object):
     When the given node is the root of the tree, stop recursion.
 
     """
-    if node == self.root:
+    if node == self._root:
       return
-    elif node.parent == self.root: #Zig
+    elif node.parent == self._root: #Zig
       if (node.parent).left == node:
         return rotateRight(node)
       elif (node.parent).right == node:
@@ -277,6 +282,10 @@ class TreeNode(object):
   """
 
   def __init__(self,key,value,parent=None,left=None,right=None):
+    """Initialize a Tree Node object given certain values.
+
+    
+    """
     self._key = key
     self._value = value
     self.parent = parent
@@ -290,5 +299,5 @@ class TreeNode(object):
 
   @property
   def value(self):
-  """Return the value stored by this tree node."""
+    """Return the value stored by this tree node."""
     return self._key
