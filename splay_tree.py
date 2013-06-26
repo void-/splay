@@ -85,7 +85,7 @@ class SplayTree(object):
 
   def __contains__(self,key):
     """Determine if a given key is within the tree. Wrapper for find()."""
-    return bool(self.find(key))
+    return (self.find(key) != None)
 
   def remove(self,key):
     """Remove an item from the splay tree.
@@ -198,35 +198,30 @@ class SplayTree(object):
     When the given node is the root of the tree, stop recursion.
 
     """
-    if node == self._root:
+    if node is self._root:
       return
-    elif node.parent == self._root: #Zig
-      if (node.parent).left == node:
+    elif node.parent is self._root: #Zig
+      if (node.parent).left is node:
         return self.rotateRight(node)
-      elif (node.parent).right == node:
+      elif (node.parent).right is node:
         return self.rotateLeft(node)
     #right left zig-zag
-    elif (node.parent.right == node) and (node.parent.parent.left == node.parent):
+    elif (node.parent.right is node) and (node.parent.parent.left is node.parent):
       self.rotateLeft(node)
       self.rotateRight(node)
     #left right zig-zag
-    elif (node.parent.left == node) and (node.parent.parent.right == node.parent):
+    elif (node.parent.left is node) and (node.parent.parent.right is node.parent):
       self.rotateRight(node)
       self.rotateLeft(node)
     #left zig-zig
-    elif (node.parent.left == node) and (node.parent.parent.left == node.parent):
+    elif (node.parent.left is node) and (node.parent.parent.left is node.parent):
       self.rotateRight(node.parent)
       self.rotateRight(node)
-      return self.splay(node)#recurse
     #right zig-zig
-    elif (node.parent.right == node) and (node.parent.parent.right == node.parent):
+    elif (node.parent.right is node) and (node.parent.parent.right is node.parent):
       self.rotateLeft(node.parent)
       self.rotateLeft(node)
-      return self.splay(node)#recurse
-
-  def splay(self,node):
-    """Mock out splay method: do nothing."""
-    pass
+    return self.splay(node)#recurse
 
   def rotateRight(self,node):
     """Rotate a given node right in the tree.
@@ -238,17 +233,36 @@ class SplayTree(object):
       ^  ^                           ^  ^
      /A\/B\                         /B\/C\
 
+    >>> s = SplayTree()
+    >>> a = TreeNode(3,0)
+    >>> b = TreeNode(2,1)
+    >>> b.parent = a
+    >>> c = TreeNode(1,2)
+    >>> c.parent = b
+    >>> s._root = a
+    >>> s._root.left = b
+    >>> s._root.left.left = c
+    >>> s.rotateRight(b)
+    >>> s._root is b
+    True
+    >>> s._root.left is c
+    True
+    >>> s._root.right is a
+    True
+
     """
     node.parent.left = node.right
     if node.right:node.right.parent = node.parent
     node.right = node.parent
-    node.right.parent = node
     node.parent = node.parent.parent
+    node.right.parent = node
     if node.parent: #If node's new parent is not None
-      if node.parent.left == node.right:
+      if node.parent.left is node.right:
         node.parent.left = node
-      elif node.parent.right == node.right:
+      elif node.parent.right is node.right:
         node.parent.right = node
+    else:
+      self._root = node
 
   def rotateLeft(self,node):
     """Rotate a given node left in the tree.
@@ -263,13 +277,15 @@ class SplayTree(object):
     node.parent.right = node.left
     if node.left:node.left.parent = node.parent
     node.left = node.parent
-    node.left.parent = node
     node.parent = node.parent.parent
+    node.left.parent = node
     if node.parent: #If node's new parent is not None
-      if node.parent.left == node.left:
+      if node.parent.left is node.left:
         node.parent.left = node
-      elif node.parent.right == node.left:
+      elif node.parent.right is node.left:
         node.parent.right = node
+    else:
+      self._root = node
 
   def __str__(self):
     from collections import deque
