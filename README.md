@@ -1,22 +1,20 @@
-splay
-=====
-
 Python splay tree
+=================
 
 Splay tree implemented in Python with the following dictionary interface:
+* insert()
+* find()
+* remove()
 
-insert()
-find()
-remove()
+The tree is encapsulated into a single file with a single class. There are no
+external dependencies.
 
----
-Development Notes:
+Tests
+=====
 
-Refactoring for better extensibility and modularity.
-  Defining function binaryHelper()-changes policy on duplicate keys.
-insertHelper() is now deprecated
-Change TreeNode so that key and value are no longer private
+Big, slow, unit testing suites test:
+* interface correctness
+* internal correctness
+* the correctness of the underlying binary tree with splay() mocked out
 
-When removing a node, is garbage collection considered?
-
-Duplicate keys are not allowed
+Tests are probabilistic; multiple runs reduce the chance of false positives.
