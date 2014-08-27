@@ -23,7 +23,7 @@ class SplayTree(object):
 
     return self._size
 
-  def insert(self,key,value):
+  def insert(self, key, value):
     """Insert an item into the splay tree, increasing its size.
 
     Keys will be inserted in O(log(n)) amortized time and then splayed to the
@@ -37,6 +37,7 @@ class SplayTree(object):
       if key == node.key: #Replace a duplicate key
         node._key = key
         node._value = value
+        return
       elif key < node.key:
         node.left = TreeNode(key,value,node)
         node = node.left
@@ -48,7 +49,7 @@ class SplayTree(object):
       self._root = TreeNode(key,value)
     self._size+=1
 
-  def insertHelper(self,key,node):
+  def insertHelper(self, key, node):
     """Insert an item into the splay tree given a node.
 
     Recursive helper function that inserts keys into a binary tree. The node
@@ -68,7 +69,7 @@ class SplayTree(object):
         node.right = TreeNode(key,parent=node)
         return node
 
-  def find(self,key):
+  def find(self, key):
     """Return the value that corresponds to the given key.
 
     Search the tree for the given key and return its corresponding value in 
@@ -83,11 +84,15 @@ class SplayTree(object):
       if node.key == key:
         return node.value
 
-  def __contains__(self,key):
-    """Determine if a given key is within the tree. Wrapper for find()."""
+  def __contains__(self, key):
+    """Determine if a given key is within the tree. Wrapper for find().
+    
+    This function returns false negatives if the entries in the tree are None.
+    """
+
     return (self.find(key) != None)
 
-  def remove(self,key):
+  def remove(self, key):
     """Remove an item from the splay tree.
 
     Given a key, it will be removed in O(log(n)) amortized time and its parent 
@@ -97,45 +102,170 @@ class SplayTree(object):
     a duplicate key will result in an arbitrary key being removed.
 
     """
-    node = self.binaryHelper(key,self._root)
-    n = node
-    if not node:
+
+    if not self._root: #nothing to remove
       return
-    elif node.key != key:#node is not actually in tree
-      pass
-    elif not node.left or not node.right:#node with single or no child
-      if node == self._root:
-        self._root = node.left if not node.right else node.right
-      else:
-        if node.parent.left == node:
-          node.parent.left = (node.left if not node.right else node.right)
+    remove = self.binaryHelper(key, self._root)
+    splayMe = None
+    #remove is not None
+    if remove.key != key: #node is not in the tree
+      splayMe = remove
+    elif remove is self._root:
+      assert not remove.parent
+      if not remove.left and not remove.right: #0 children
+        self._root = None
+      elif remove.left and not remove.right: #left child only
+        self._root = remove.left
+        remove.left.parent = None
+        remove.left = None
+      elif remove.right and not remove.left: #right child only
+        self._root = remove.right
+        remove.right.parent = None
+        remove.right = None
+      elif remove.right and remove.left: #both children
+        replace = self.minNode(remove.right)
+        assert replace
+        assert not replace.left
+
+        if replace is remove.right:
+          replace.left = remove.left
+          replace.left.parent = replace
+          remove.left = None
+          replace.parent = None
+          remove.right = None
+          self._root = replace
         else:
-          node.parent.right = (node.left if not node.right else node.right)
-      self._size-=1
-    else:#node must have two children
-      r = self.minNode(node.right)#r is guaranteed to be a node
-      r.left = node.left
-      node.left.parent = r
+          assert replace.isLeftChild
+          replace.left = remove.left
+          replace.left.parent = replace
+          remove.left = None
+          if replace.right:
+            replace.right.parent = replace.parent
+            replace.parent.left = replace.right
+          else:
+            replace.parent.left = None
+          replace.parent = None
+          remove.right.parent = replace
+          replace.right = remove.right
+          remove.right = None
+          self._root = replace
 
-      if node.right != r:#general case for removing r
-        r.parent.left = r.right
-        if r.right: r.right.parent = r.parent
-        n = r.parent#save as n
-        r.right = node.right
-        node.right.parent = r
+    else: #handle not root
+      assert remove.parent
+      if not remove.left and not remove.right: #0 children
+        if remove.isLeftChild:
+          remove.parent.left = None
+        elif remove.isRightChild:
+          remove.parent.right = None
+        splayMe = remove.parent
+        remove.parent = None
+      elif remove.left and not remove.right: #left child only
+        if remove.isLeftChild:
+          remove.parent.left = remove.left
+          remove.left.parent = remove.parent
+          remove.left = None
+          splayMe = remove.parent
+          remove.parent = None
+        elif remove.isRightChild:
+          remove.parent.right = remove.left
+          remove.left.parent = remove.parent
+          remove.left = None
+          splayMe = remove.parent
+          remove.parent = None
+      elif remove.right and not remove.left: #right child only
+        if remove.isLeftChild:
+          remove.parent.left = remove.right
+          remove.right.parent = remove.parent
+          remove.right = None
+          splayMe = remove.parent
+          remove.parent = None
+        elif remove.isRightChild:
+          remove.parent.right = remove.right
+          remove.right.parent = remove.parent
+          remove.right = None
+          splayMe = remove.parent
+          remove.parent = None
+      elif remove.left and remove.right: #both children
+        splayMe = replace = self.minNode(remove.right)
+        assert replace
+        assert not replace.left
 
-      r.parent = node.parent
-      if node == self._root:#link up parents
-        self._root = node
-      else:
-        if node.parent.left == node:
-          node.parent.left = r
-        else:
-          node.parent.right = r
-      self._size-=1
-    self.splay(n)
+        if remove.isLeftChild:
+          if replace is remove.right:
+            replace.left = remove.left
+            replace.left.parent = replace
+            remove.left = None
+            remove.parent.left = replace
+            replace.parent = remove.parent
+            remove.parent = None
+          else:
+            assert replace.isLeftChild
+            replace.left = remove.left
+            replace.left.parent = replace
+            remove.left = None
+            if replace.right:
+              replace.parent.left = replace.right
+              replace.right.parent = replace.parent
+            else:
+              replace.parent.left = None
+            replace.right = remove.right
+            replace.right.parent = replace
+            remove.right = None
+            replace.parent = remove.parent
+            replace.parent.left = replace
+            remove.parent = None
+        elif remove.isRightChild:
+          if replace is remove.right:
+            replace.left = remove.left
+            replace.left.parent = replace
+            remove.left = None
+            remove.parent.right = replace
+            replace.parent = remove.parent
+            remove.parent = None
+          else:
+            assert replace.isLeftChild
+            replace.left = remove.left
+            replace.left.parent = replace
+            remove.left = None
+            if replace.right:
+              replace.right.parent = replace.parent
+              replace.parent.left = replace.right
+            else:
+              replace.parent.left = None
+            replace.right = remove.right
+            replace.right.parent = replace
+            remove.right = None
+            replace.parent = remove.parent
+            replace.parent.right = replace
+            remove.parent = None
+    self.splay(splayMe)
+    self._size -= 1
 
-  def minNode(self,node):
+  def _removeRoot():
+    """Remove the root from the tree.
+
+    Helper function that removes the root from the tree and links up its
+    replacement.
+
+    The root either has one or both children, but no parent
+    
+    """
+
+  def _removeParented(remove):
+    """Remove a node in the tree that has a parent.
+
+    Helper function given a node that has a parent, removes the node from the
+    tree regardless of how many children it has.
+
+    """
+    #remove has a parent
+    #unknown what kind of child remove is
+    c = self.minNode(remove.right)
+    if not c: #no right child ; left child unknown
+      remove.parent
+
+
+  def minNode(self, node):
     """Return the node that contains the minimum key.
 
     Helper function that returns the node with the minimum key in a tree given
@@ -146,7 +276,7 @@ class SplayTree(object):
       return node
     return self.minNode(node.left)
 
-  def maxNode(self,node):
+  def maxNode(self, node):
     """Return the node that contains the maximum key.
 
     Helper function that returns the node with the maximum key in a tree given
@@ -155,9 +285,9 @@ class SplayTree(object):
     """
     if not node or not node.right:
       return node
-    return self.minNode(node.right)
+    return self.maxNode(node.right)
 
-  def binaryHelper(self,key,node):
+  def binaryHelper(self, key, node):
     """Find a node that is *right* for the given key.
 
     Helper function that returns the node that suits the key. If the key is not 
@@ -179,7 +309,7 @@ class SplayTree(object):
       else:
         return node
 
-  def splay(self,node):
+  def splay(self, node):
     """Splay a node up to the root.
 
     Mutate this splay tree so that the given node becomes the root of the tree.
@@ -195,35 +325,36 @@ class SplayTree(object):
     zig(base-case):
       The node is either a right child or a left child of the root. Rotate up.
 
-    When the given node is the root of the tree, stop recursion.
+    When the given node is the root of the tree, stop recursion. If node is
+    None, return.
 
     """
-    if node is self._root:
+    if not node or node is self._root:
       return
     elif node.parent is self._root: #Zig
-      if (node.parent).left is node:
+      if node.isLeftChild:
         return self.rotateRight(node)
-      elif (node.parent).right is node:
+      elif node.isRightChild:
         return self.rotateLeft(node)
     #right left zig-zag
-    elif (node.parent.right is node) and (node.parent.parent.left is node.parent):
+    elif node.isRightChild and node.parent.isLeftChild:
       self.rotateLeft(node)
       self.rotateRight(node)
     #left right zig-zag
-    elif (node.parent.left is node) and (node.parent.parent.right is node.parent):
+    elif node.isLeftChild and node.parent.isRightChild:
       self.rotateRight(node)
       self.rotateLeft(node)
     #left zig-zig
-    elif (node.parent.left is node) and (node.parent.parent.left is node.parent):
+    elif node.isLeftChild and node.parent.isLeftChild:
       self.rotateRight(node.parent)
       self.rotateRight(node)
     #right zig-zig
-    elif (node.parent.right is node) and (node.parent.parent.right is node.parent):
+    elif node.isRightChild and node.parent.isRightChild:
       self.rotateLeft(node.parent)
       self.rotateLeft(node)
     return self.splay(node)#recurse
 
-  def rotateRight(self,node):
+  def rotateRight(self, node):
     """Rotate a given node right in the tree.
 
           P                         n
@@ -264,7 +395,7 @@ class SplayTree(object):
     else:
       self._root = node
 
-  def rotateLeft(self,node):
+  def rotateLeft(self, node):
     """Rotate a given node left in the tree.
        P                           n
       / \        rotateLeft()     / \
@@ -288,25 +419,23 @@ class SplayTree(object):
       self._root = node
 
   def __str__(self):
-    from collections import deque
-    q = deque()
-    n = lambda:None
-    q.append(self._root)
-    q.append(n)
-    a = None
-    result = ""
-    while len(q) > 1:
-      a = q.popleft()
-      if a == n:
-        result+="\n"
-        q.append(a)
-      elif a:
-        q.append(a.left)
-        q.append(a.right)
-        result+="  "+str(a.key)+":"+str(a.value)
-      else:
-        result+="  "
-    return result
+    """Return the string representation of the tree.
+    
+    Return a string representing the tree sideways.
+    Left nodes are below its parent, right above. Each level is indented with
+    two spaces.
+    
+    """
+    q = []
+    def traversalHelper(n, d=0):
+      if not n:
+        return
+      traversalHelper(n.right, d+1)
+      q.append((d, n))
+      traversalHelper(n.left, d+1)
+    traversalHelper(self._root)
+
+    return "".join(p[0]*"  "+str(p[1].key)+":"+str(p[1].value)+"\n" for p in q)
 
 class TreeNode(object):
   """Tree Node object.
@@ -322,8 +451,9 @@ class TreeNode(object):
 
   """
 
-  def __init__(self,key,value,parent=None,left=None,right=None):
+  def __init__(self, key, value, parent=None, left=None, right=None):
     """Initialize a Tree Node object given certain values."""
+
     self._key = key
     self._value = value
     self.parent = parent
@@ -339,3 +469,25 @@ class TreeNode(object):
   def value(self):
     """Return the value stored by this tree node."""
     return self._value
+
+  @property
+  def isLeftChild(self):
+    """Return whether this node is a left child."""
+    if self.parent:
+      return (self.parent).left is self
+
+  @property
+  def isRightChild(self):
+    """Return whether this node is a right child."""
+    if self.parent:
+      return (self.parent).right is self
+
+if __name__ == "__main__":
+  s = SplayTree()
+  from random import randint
+  r = set()
+  #s.splay = lambda a: None
+  for i in xrange(20):
+    a = randint(-10000, 10000)
+    r.add(a)
+    s.insert(a, True)
