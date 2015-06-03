@@ -1,8 +1,8 @@
 class SplayTree(object):
   """Splay Tree object.
 
-  A splay tree is a self balancing binary search tree with operations that run 
-  in O(log(n)) amortized time, where n is the number of entries in the tree. 
+  A splay tree is a self balancing binary search tree with operations that run
+  in O(log(n)) amortized time, where n is the number of entries in the tree.
   This particular implementation uses a dictionary interface; it may be
   extended to use a key only interface however.
 
@@ -72,9 +72,9 @@ class SplayTree(object):
   def find(self, key):
     """Return the value that corresponds to the given key.
 
-    Search the tree for the given key and return its corresponding value in 
-    O(log(n)) amortized time. If the key is not in this tree, return None. 
-    The node that the search ends on is splayed to the root of the tree. No 
+    Search the tree for the given key and return its corresponding value in
+    O(log(n)) amortized time. If the key is not in this tree, return None.
+    The node that the search ends on is splayed to the root of the tree. No
     duplicates are allowed in this implementation.
 
     """
@@ -86,7 +86,7 @@ class SplayTree(object):
 
   def __contains__(self, key):
     """Determine if a given key is within the tree. Wrapper for find().
-    
+
     This function returns false negatives if the entries in the tree are None.
     """
 
@@ -95,10 +95,10 @@ class SplayTree(object):
   def remove(self, key):
     """Remove an item from the splay tree.
 
-    Given a key, it will be removed in O(log(n)) amortized time and its parent 
+    Given a key, it will be removed in O(log(n)) amortized time and its parent
     will be splayed to the root of the tree. If the operation is successful,
-    the size of the tree will decrease be one and the value of the key will be 
-    returned, otherwise, a value of None will be returned. Calling remove() on 
+    the size of the tree will decrease be one and the value of the key will be
+    returned, otherwise, a value of None will be returned. Calling remove() on
     a duplicate key will result in an arbitrary key being removed.
 
     """
@@ -248,7 +248,7 @@ class SplayTree(object):
     replacement.
 
     The root either has one or both children, but no parent
-    
+
     """
 
   def _removeParented(remove):
@@ -290,9 +290,9 @@ class SplayTree(object):
   def binaryHelper(self, key, node):
     """Find a node that is *right* for the given key.
 
-    Helper function that returns the node that suits the key. If the key is not 
+    Helper function that returns the node that suits the key. If the key is not
     currently in the tree, return the parent node. If the key is already in the
-    tree, return the node that contains it. This function returns None if the 
+    tree, return the node that contains it. This function returns None if the
     given node is equal to None.
 
     """
@@ -420,11 +420,11 @@ class SplayTree(object):
 
   def __str__(self):
     """Return the string representation of the tree.
-    
+
     Return a string representing the tree sideways.
     Left nodes are below its parent, right above. Each level is indented with
     two spaces.
-    
+
     """
     q = []
     def traversalHelper(n, d=0):

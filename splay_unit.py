@@ -116,7 +116,7 @@ class TestSplayDeep(TestSplayBasic):
   """Test some of the internal features of the splay tree.
 
   This requires internal access to the members of SplayTree.
-  
+
   """
 
   def testMin(self):
@@ -181,7 +181,7 @@ class TestSplayDeep(TestSplayBasic):
       self.s._root.left)
 
   def testRemoveDeep(self):
-    """Test if removing an item from the tree updates it correctly. 
+    """Test if removing an item from the tree updates it correctly.
 
     Do several rounds of inserts and removes and make sure that there are no
     inconsistancies between a splay tree and a python set.
